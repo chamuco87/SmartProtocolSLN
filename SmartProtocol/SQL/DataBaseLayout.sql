@@ -12,8 +12,8 @@ CREATE TABLE [Protocol].[Address](
 	[AddressId] [bigint] IDENTITY(1,1) NOT NULL,
 	[UserId] [bigint] NOT NULL,
 	[AddressTypeId] [int] NOT NULL,
-	[Address] [varchar](80) NOT NULL,
-	[Address1] [varchar](80) NULL,
+	[Address1] [varchar](80) NOT NULL,
+	[Address2] [varchar](80) NULL,
 	[City] [varchar](80) NOT NULL,
 	[State] [varchar](80) NOT NULL,
 	[Country] [varchar](80) NOT NULL,
@@ -62,7 +62,7 @@ GO
 CREATE TABLE [Protocol].[Email](
 	[EmailId] [bigint] IDENTITY(1,1) NOT NULL,
 	[UserId] [bigint] NOT NULL,
-	[Email] [varchar](50) NOT NULL,
+	[EmailAddress] [varchar](50) NOT NULL UNIQUE,
 	[IsPrimary] [bit] NOT NULL,
 	[IsVerified] [bit] NOT NULL,
  CONSTRAINT [PK_Email1] PRIMARY KEY CLUSTERED 
@@ -172,7 +172,7 @@ CREATE TABLE [Protocol].[Telephone](
 	[TelephoneId] [bigint] IDENTITY(1,1) NOT NULL,
 	[UserId] [bigint] NOT NULL,
 	[TelephoneTypeId] [int] NOT NULL,
-	[Telephone] [varchar](10) NOT NULL,
+	[TelephoneNumber] [varchar](10) NOT NULL,
  CONSTRAINT [PK_Telephone] PRIMARY KEY CLUSTERED 
 (
 	[TelephoneId] ASC
@@ -211,40 +211,51 @@ CREATE TABLE [Protocol].[User](
 GO
 ALTER TABLE [Protocol].[Address]  WITH CHECK ADD FOREIGN KEY([AddressTypeId])
 REFERENCES [Protocol].[AddressType] ([AddressTypeId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Address]  WITH CHECK ADD FOREIGN KEY([UserId])
 REFERENCES [Protocol].[User] ([UserId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Email]  WITH CHECK ADD FOREIGN KEY([UserId])
 REFERENCES [Protocol].[User] ([UserId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Flow]  WITH CHECK ADD FOREIGN KEY([UserId])
 REFERENCES [Protocol].[User] ([UserId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Login]  WITH CHECK ADD FOREIGN KEY([EmailId])
 REFERENCES [Protocol].[Email] ([EmailId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Login]  WITH CHECK ADD FOREIGN KEY([UserId])
 REFERENCES [Protocol].[User] ([UserId])
 GO
 ALTER TABLE [Protocol].[Step]  WITH CHECK ADD FOREIGN KEY([FlowId])
 REFERENCES [Protocol].[Flow] ([FlowId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Step]  WITH CHECK ADD FOREIGN KEY([StepTypeId])
 REFERENCES [Protocol].[StepType] ([StepTypeId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Step]  WITH CHECK ADD FOREIGN KEY([UserId])
 REFERENCES [Protocol].[User] ([UserId])
 GO
 ALTER TABLE [Protocol].[StepAlert]  WITH CHECK ADD FOREIGN KEY([AlertTypeId])
 REFERENCES [Protocol].[AlertType] ([AlertTypeId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[StepAlert]  WITH CHECK ADD FOREIGN KEY([StepId])
 REFERENCES [Protocol].[Step] ([StepId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Telephone]  WITH CHECK ADD FOREIGN KEY([TelephoneTypeId])
 REFERENCES [Protocol].[TelephoneType] ([TelephoneTypeId])
+ON DELETE CASCADE
 GO
 ALTER TABLE [Protocol].[Telephone]  WITH CHECK ADD FOREIGN KEY([UserId])
 REFERENCES [Protocol].[User] ([UserId])
+ON DELETE CASCADE
 GO

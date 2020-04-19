@@ -45,12 +45,10 @@ namespace SmartProtocol.Models
 
                 entity.Property(e => e.Address1)
                     .IsRequired()
-                    .HasColumnName("Address")
                     .HasMaxLength(80)
                     .IsUnicode(false);
 
-                entity.Property(e => e.Address11)
-                    .HasColumnName("Address1")
+                entity.Property(e => e.Address2)
                     .HasMaxLength(80)
                     .IsUnicode(false);
 
@@ -77,14 +75,12 @@ namespace SmartProtocol.Models
                 entity.HasOne(d => d.AddressType)
                     .WithMany(p => p.Address)
                     .HasForeignKey(d => d.AddressTypeId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Address__Address__47DBAE45");
+                    .HasConstraintName("FK__Address__Address__42E1EEFE");
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Address)
                     .HasForeignKey(d => d.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Address__UserId__48CFD27E");
+                    .HasConstraintName("FK__Address__UserId__43D61337");
             });
 
             modelBuilder.Entity<AddressType>(entity =>
@@ -119,17 +115,19 @@ namespace SmartProtocol.Models
             {
                 entity.ToTable("Email", "Protocol");
 
-                entity.Property(e => e.Email1)
+                entity.HasIndex(e => e.EmailAddress)
+                    .HasName("UQ__Email__49A14740B1F317A5")
+                    .IsUnique();
+
+                entity.Property(e => e.EmailAddress)
                     .IsRequired()
-                    .HasColumnName("Email")
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Email)
                     .HasForeignKey(d => d.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Email__UserId__4316F928");
+                    .HasConstraintName("FK__Email__UserId__44CA3770");
             });
 
             modelBuilder.Entity<Flow>(entity =>
@@ -146,8 +144,7 @@ namespace SmartProtocol.Models
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Flow)
                     .HasForeignKey(d => d.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Flow__UserId__4BAC3F29");
+                    .HasConstraintName("FK__Flow__UserId__45BE5BA9");
             });
 
             modelBuilder.Entity<Login>(entity =>
@@ -162,14 +159,13 @@ namespace SmartProtocol.Models
                 entity.HasOne(d => d.Email)
                     .WithMany(p => p.Login)
                     .HasForeignKey(d => d.EmailId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Login__EmailId__6383C8BA");
+                    .HasConstraintName("FK__Login__EmailId__46B27FE2");
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Login)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Login__UserId__628FA481");
+                    .HasConstraintName("FK__Login__UserId__47A6A41B");
             });
 
             modelBuilder.Entity<Step>(entity =>
@@ -201,20 +197,18 @@ namespace SmartProtocol.Models
                 entity.HasOne(d => d.Flow)
                     .WithMany(p => p.Step)
                     .HasForeignKey(d => d.FlowId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Step__FlowId__534D60F1");
+                    .HasConstraintName("FK__Step__FlowId__489AC854");
 
                 entity.HasOne(d => d.StepType)
                     .WithMany(p => p.Step)
                     .HasForeignKey(d => d.StepTypeId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Step__StepTypeId__5441852A");
+                    .HasConstraintName("FK__Step__StepTypeId__498EEC8D");
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Step)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Step__UserId__52593CB8");
+                    .HasConstraintName("FK__Step__UserId__4A8310C6");
             });
 
             modelBuilder.Entity<StepAlert>(entity =>
@@ -233,14 +227,12 @@ namespace SmartProtocol.Models
                 entity.HasOne(d => d.AlertType)
                     .WithMany(p => p.StepAlert)
                     .HasForeignKey(d => d.AlertTypeId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__StepAlert__Alert__5812160E");
+                    .HasConstraintName("FK__StepAlert__Alert__4B7734FF");
 
                 entity.HasOne(d => d.Step)
                     .WithMany(p => p.StepAlert)
                     .HasForeignKey(d => d.StepId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__StepAlert__StepI__571DF1D5");
+                    .HasConstraintName("FK__StepAlert__StepI__4C6B5938");
             });
 
             modelBuilder.Entity<StepType>(entity =>
@@ -261,23 +253,20 @@ namespace SmartProtocol.Models
             {
                 entity.ToTable("Telephone", "Protocol");
 
-                entity.Property(e => e.Telephone1)
+                entity.Property(e => e.TelephoneNumber)
                     .IsRequired()
-                    .HasColumnName("Telephone")
                     .HasMaxLength(10)
                     .IsUnicode(false);
 
                 entity.HasOne(d => d.TelephoneType)
                     .WithMany(p => p.Telephone)
                     .HasForeignKey(d => d.TelephoneTypeId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Telephone__Telep__3F466844");
+                    .HasConstraintName("FK__Telephone__Telep__4D5F7D71");
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Telephone)
                     .HasForeignKey(d => d.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Telephone__UserI__3E52440B");
+                    .HasConstraintName("FK__Telephone__UserI__4E53A1AA");
             });
 
             modelBuilder.Entity<TelephoneType>(entity =>

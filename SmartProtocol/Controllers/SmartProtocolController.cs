@@ -16,11 +16,13 @@ using SmartProtocol.ViewModels;
 using Nancy.Json;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Cors;
 
 namespace SmartProtocol.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    //[EnableCors("AllowAllHeaders")]
     public class SmartProtocolController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -31,6 +33,7 @@ namespace SmartProtocol.Controllers
         private DB_A57E75_chamucolol87Context dbContext = new DB_A57E75_chamucolol87Context();
 
         [HttpPost("Register")]
+        
         public ContentResult Register([FromBody] JToken data)
         {
             string email = "";

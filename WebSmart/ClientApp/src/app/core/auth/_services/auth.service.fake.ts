@@ -14,7 +14,10 @@ import { QueryParamsModel, QueryResultsModel, HttpUtilsService } from '../../_ba
 import { User } from '../_models/user.model';
 import { Permission } from '../_models/permission.model';
 import { Role } from '../_models/role.model';
+import { ApiRegister } from '../_models/api-register.model';
 
+const BASE_API_URL = 'https://localhost:44307/'
+const REGISTER_USER = 'api/SmartProtocol/Register'
 const API_USERS_URL = 'api/users';
 const API_PERMISSION_URL = 'api/permissions';
 const API_ROLES_URL = 'api/roles';
@@ -55,13 +58,16 @@ export class AuthService {
         user.roles = [2]; // Manager
         user.accessToken = 'access-token-' + Math.random();
         user.refreshToken = 'access-token-' + Math.random();
-        user.pic = './assets/media/users/default.jpg';
+		user.pic = './assets/media/users/default.jpg';
+		let apiUser = new ApiRegister();
+		apiUser.Email = user.email;
+		apiUser.Password = user.password;
 
         const httpHeaders = new HttpHeaders();
-        httpHeaders.set('Content-Type', 'application/json');
-        return this.http.post<User>(API_USERS_URL, user, { headers: httpHeaders })
+		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
+		return this.http.post<ApiRegister>(BASE_API_URL + REGISTER_USER, apiUser, { headers: httpHeaders })
             .pipe(
-                map((res: User) => {
+				map((res: ApiRegister) => {
                     return res;
                 }),
                 catchError(err => {

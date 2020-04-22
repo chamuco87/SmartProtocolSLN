@@ -75,12 +75,12 @@ export class RegisterComponent implements OnInit, OnDestroy {
 	 */
 	initRegisterForm() {
 		this.registerForm = this.fb.group({
-			fullname: ['', Validators.compose([
-				Validators.required,
-				Validators.minLength(3),
-				Validators.maxLength(100)
-			])
-			],
+			//fullname: ['', Validators.compose([
+			//	Validators.required,
+			//	Validators.minLength(3),
+			//	Validators.maxLength(100)
+			//])
+			//],
 			email: ['', Validators.compose([
 				Validators.required,
 				Validators.email,
@@ -89,12 +89,12 @@ export class RegisterComponent implements OnInit, OnDestroy {
 				Validators.maxLength(320)
 			]),
 			],
-			username: ['', Validators.compose([
-				Validators.required,
-				Validators.minLength(3),
-				Validators.maxLength(100)
-			]),
-			],
+			//username: ['', Validators.compose([
+			//	Validators.required,
+			//	Validators.minLength(3),
+			//	Validators.maxLength(100)
+			//]),
+			//],
 			password: ['', Validators.compose([
 				Validators.required,
 				Validators.minLength(3),
@@ -127,7 +127,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
 			return;
 		}
 
-		this.loading = true;
 
 		if (!controls.agree.value) {
 			// you must agree the terms and condition
@@ -136,11 +135,13 @@ export class RegisterComponent implements OnInit, OnDestroy {
 			return;
 		}
 
+		this.loading = true;
+
 		const _user: User = new User();
 		_user.clear();
 		_user.email = controls.email.value;
-		_user.username = controls.username.value;
-		_user.fullname = controls.fullname.value;
+		//_user.username = controls.username.value;
+		//_user.fullname = controls.fullname.value;
 		_user.password = controls.password.value;
 		_user.roles = [];
 		this.auth.register(_user).pipe(

@@ -9,6 +9,8 @@ namespace SmartProtocol.Models
         public long UserId { get; set; }
         public long EmailId { get; set; }
         public string Password { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? LastLoginOn { get; set; }
 
         public virtual Email Email { get; set; }
         public virtual User User { get; set; }

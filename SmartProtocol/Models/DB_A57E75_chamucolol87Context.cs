@@ -119,6 +119,11 @@ namespace SmartProtocol.Models
                     .HasName("UQ__Email__49A14740B1F317A5")
                     .IsUnique();
 
+                entity.Property(e => e.ActivationToken)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.EmailAddress)
                     .IsRequired()
                     .HasMaxLength(50)
@@ -150,6 +155,10 @@ namespace SmartProtocol.Models
             modelBuilder.Entity<Login>(entity =>
             {
                 entity.ToTable("Login", "Protocol");
+
+                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.LastLoginOn).HasColumnType("datetime");
 
                 entity.Property(e => e.Password)
                     .IsRequired()

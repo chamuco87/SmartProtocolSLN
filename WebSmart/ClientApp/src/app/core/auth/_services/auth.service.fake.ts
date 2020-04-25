@@ -1,6 +1,6 @@
 // Angular
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 // RxJS
 import { Observable, of, forkJoin } from 'rxjs';
 import { map, catchError, mergeMap, tap } from 'rxjs/operators';
@@ -18,40 +18,42 @@ import { ApiRegister } from '../_models/api-register.model';
 
 const BASE_API_URL = 'https://localhost:44307/'
 const REGISTER_USER = 'api/SmartProtocol/Register'
+const EMAIL_EXISTS = 'api/SmartProtocol/EmailExists'
+const LOGIN_USER = 'api/SmartProtocol/Login'
 const API_USERS_URL = 'api/users';
 const API_PERMISSION_URL = 'api/permissions';
 const API_ROLES_URL = 'api/roles';
 
-@Injectable()
+
+@Injectable({
+	providedIn: 'root'
+})
 export class AuthService {
     constructor(private http: HttpClient,
                 private httpUtils: HttpUtilsService) { }
 
     // Authentication/Authorization
-    login(email: string, password: string): Observable<User> {
+    login(email: string, password: string): Observable<any> {
         if (!email || !password) {
             return of(null);
         }
+		let apiUser = new ApiRegister();
+		apiUser.Email = email;
+		apiUser.Password = password;
 
-        return  this.getAllUsers().pipe(
-            map((result: User[]) => {
-                if (result.length <= 0) {
-                    return null;
-                }
-
-                const user = find(result, (item: User) => {
-                    return (item.email.toLowerCase() === email.toLowerCase() && item.password === password);
-                });
-
-                if (!user) {
-                    return null;
-                }
-
-                user.password = undefined;
-                return user;
-            })
-        );
-
+		const httpHeaders = new HttpHeaders();
+		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
+		return this.http.post<ApiRegister>(BASE_API_URL + LOGIN_USER, apiUser, { headers: httpHeaders })
+			.pipe(
+				map((res: any) => {
+					let _user = new User();
+					_user.accessToken = res.Email + res.Password;
+					return _user;
+				}),
+				catchError(err => {
+					return null;
+				})
+			);
     }
 
     register(user: User): Observable<any> {
@@ -67,14 +69,46 @@ export class AuthService {
 		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
 		return this.http.post<ApiRegister>(BASE_API_URL + REGISTER_USER, apiUser, { headers: httpHeaders })
             .pipe(
-				map((res: ApiRegister) => {
-                    return res;
+				map((res: any) => {
+					if (res.data) {
+
+						 return res.data;
+					}
+					else {
+						return res;
+					}
                 }),
                 catchError(err => {
                     return null;
                 })
             );
-    }
+	}
+
+	emailExists(email: string): Observable<any> {
+		const httpHeaders = new HttpHeaders();
+		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
+
+		const options = { params: new HttpParams({ fromObject: { email: email } }), headers: httpHeaders };
+
+
+		let apiUser = new ApiRegister();
+		apiUser.Email = email;
+		apiUser.Password = "";
+		return this.http.post<ApiRegister>(BASE_API_URL + EMAIL_EXISTS, apiUser, { headers: httpHeaders })
+			.pipe(
+				map((res: any) => {
+					if (res.data) {
+						return res.data.emailExists;
+					}
+					else {
+						return false;
+					}
+				}),
+				catchError(err => {
+					return null;
+				})
+			);
+	}
 
     requestPassword(email: string): Observable<any> {
     	return this.http.get(API_USERS_URL).pipe(

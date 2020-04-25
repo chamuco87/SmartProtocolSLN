@@ -1,5 +1,5 @@
 // Angular
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation, NgModule } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 // RxJS
@@ -13,12 +13,22 @@ import { AppState } from '../../../../core/reducers';
 import { AuthNoticeService, AuthService, Register, User } from '../../../../core/auth/';
 import { Subject } from 'rxjs';
 import { ConfirmPasswordValidator } from './confirm-password.validator';
+import { EmailExistsValidator } from './email-exists.validator';
+import { HttpClientModule } from '@angular/common/http';
 
 @Component({
 	selector: 'kt-register',
 	templateUrl: './register.component.html',
 	encapsulation: ViewEncapsulation.None
 })
+
+@NgModule({
+	imports: [
+		HttpClientModule,
+		EmailExistsValidator
+	]
+})
+
 export class RegisterComponent implements OnInit, OnDestroy {
 	registerForm: FormGroup;
 	loading = false;
@@ -86,8 +96,10 @@ export class RegisterComponent implements OnInit, OnDestroy {
 				Validators.email,
 				Validators.minLength(3),
 				// https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
-				Validators.maxLength(320)
-			]),
+				Validators.maxLength(320),
+				EmailExistsValidator.EmailExists(this.auth)
+			],
+				)
 			],
 			//username: ['', Validators.compose([
 			//	Validators.required,
@@ -109,7 +121,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 			],
 			agree: [false, Validators.compose([Validators.required])]
 		}, {
-			validator: ConfirmPasswordValidator.MatchPassword
+				validator: [ConfirmPasswordValidator.MatchPassword]
 		});
 	}
 

@@ -1,4 +1,8 @@
-﻿USE [DB_A57E75_chamucolol87]
+﻿/*
+Scaffold-DbContext "Server=SQL5053.site4now.net;Initial Catalog=DB_A57E75_chamucolol87;User Id=DB_A57E75_chamucolol87_admin;Password=lomas123;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -force
+dotnet ef dbcontext scaffold "Server=SQL5053.site4now.net;Initial Catalog=DB_A57E75_chamucolol87;User Id=DB_A57E75_chamucolol87_admin;Password=lomas123;" Microsoft.EntityFrameworkCore.SqlServer -o Models -force
+*/
+USE [DB_A57E75_chamucolol87]
 GO
 /****** Object:  Schema [Protocol]    Script Date: 4/19/2020 12:56:25 PM ******/
 CREATE SCHEMA [Protocol]

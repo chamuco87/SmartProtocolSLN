@@ -15,6 +15,7 @@ namespace SmartProtocol.Models
         public string EmailAddress { get; set; }
         public bool IsPrimary { get; set; }
         public bool IsVerified { get; set; }
+        public string ActivationToken { get; set; }
 
         public virtual User User { get; set; }
         public virtual ICollection<Login> Login { get; set; }

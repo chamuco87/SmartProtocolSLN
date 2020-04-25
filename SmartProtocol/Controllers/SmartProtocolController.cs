@@ -2,21 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SmartProtocol.Models;
 using SmartProtocol.ViewModels;
 using Nancy.Json;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Cors;
+using SmartProtocol.Models.ViewModels.WebModels;
 
 namespace SmartProtocol.Controllers
 {
@@ -25,12 +18,41 @@ namespace SmartProtocol.Controllers
     //[EnableCors("AllowAllHeaders")]
     public class SmartProtocolController : ControllerBase
     {
+        SmartProtocolService _smartProtocolService = new SmartProtocolService();
+
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        private DB_A57E75_chamucolol87Context dbContext = new DB_A57E75_chamucolol87Context();
+
+        [HttpPost("Login")]
+
+        public ContentResult Login([FromBody] JToken data)
+        {
+            SingUpViewModel jsonData;
+            try
+            {
+                jsonData = JsonConvert.DeserializeObject<SingUpViewModel>(data.ToString());
+
+                if (!string.IsNullOrEmpty(jsonData.Email) && !string.IsNullOrEmpty(jsonData.Password))
+                {
+                    var _Login = _smartProtocolService.ValidateLogin(jsonData.Email, jsonData.Password);
+                    var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { _userId = _Login.UserId } };
+                    return GenerateResponse(response);
+                }
+                else
+                {
+                    throw (new Exception("Pass all parameters email and password."));
+                }
+            }
+            catch (Exception ex)
+            {
+                List<Error> errors = new List<Error>();
+                errors.Add(new Error() { ErrorCode = "VAL0125", ErrorDetail = ex.Message });
+                return GenerateErrorResponse(errors);
+            }
+        }
 
         [HttpPost("Register")]
         
@@ -57,7 +79,7 @@ namespace SmartProtocol.Controllers
 
                     if(IsValidPasswordFormat(jsonData.Password))
                     { 
-                        password = Encode64(jsonData.Password);
+                        password = _smartProtocolService.Encode64(jsonData.Password);
                     }
                     else
                     {
@@ -70,34 +92,15 @@ namespace SmartProtocol.Controllers
                 }
 
 
-            
-                
-                var isEmailRegistered = dbContext.Email.Where(m => m.EmailAddress == email).Any();
+                var isEmailRegistered = EmailAlreadyExists(email);
                 if (!isEmailRegistered)
                 {
                     try
                     {
-                        var user = new User();
-                        dbContext.Add(user);
-                        dbContext.SaveChanges();
-                        var userEmail = new Email()
-                        {
-                            UserId = user.UserId,
-                            EmailAddress = email,
-                            IsPrimary = true,
-                            IsVerified = false,
-                        };
-                        dbContext.Email.Add(userEmail);
-                        dbContext.SaveChanges();
-                        var login = new Login()
-                        {
-                            UserId = user.UserId,
-                            EmailId = userEmail.EmailId,
-                            Password = password
-                        };
-                        dbContext.Login.Add(login);
-                        dbContext.SaveChanges();
-                        var response = new ResponseViewModel() { IsSuccess = true, Data = dbContext.User.Where(m => m.UserId == user.UserId).Select(m => new { UserId = m.UserId}).FirstOrDefault() };
+                        string activationToken = _smartProtocolService.GenerateActivationToken(email, DateTime.Now);
+                        var _Login =_smartProtocolService.SaveUser(email, password, activationToken);
+                        _smartProtocolService.SendEmailMessage(email, activationToken);
+                        var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { _userId = _Login.UserId } };
                         return GenerateResponse(response);
                     }
                     catch (Exception ex)
@@ -131,6 +134,24 @@ namespace SmartProtocol.Controllers
                 Summary = Summaries[rng.Next(Summaries.Length)]
             })
             .ToArray();
+        }
+
+        public bool EmailAlreadyExists(string email)
+        {
+           return _smartProtocolService.EmailAlreadyExists(email);
+        }
+
+        [HttpPost("EmailExists")]
+        public ContentResult EmailExists([FromBody] JToken data)
+        {
+            var jsonData = JsonConvert.DeserializeObject<SingUpViewModel>(data.ToString());
+            bool exists = false;
+            if (!string.IsNullOrEmpty(jsonData.Email))
+            {
+                exists = EmailAlreadyExists(jsonData.Email);
+            }
+            var response = new ResponseViewModel() { IsSuccess = true, Data = new { emailExists = exists } };
+            return GenerateResponse(response);
         }
 
         [HttpGet("IsValidEmail")]
@@ -238,44 +259,5 @@ namespace SmartProtocol.Controllers
             return GenerateResponse(response);
         }
 
-        public string Encode64(string text)
-        {
-            try
-            {
-                if (!String.IsNullOrEmpty(text))
-                {
-                    byte[] textBytes = Encoding.UTF8.GetBytes(text);
-                    return Convert.ToBase64String(textBytes);
-                }
-                else {
-                    throw (new Exception("Invalid string to Encode"));
-                }
-
-            }
-            catch {
-                throw (new Exception("Invalid string to Encode"));
-            }
-        }
-
-        public string Decode64(string encodedText)
-        {
-            try
-            {
-                if (!String.IsNullOrEmpty(encodedText))
-                {
-                    byte[] textBytes = Convert.FromBase64String(encodedText);
-                    return Encoding.UTF8.GetString(textBytes); ;
-                }
-                else
-                {
-                    throw (new Exception("Invalid string to Decode"));
-                }
-
-            }
-            catch
-            {
-                throw (new Exception("Invalid string to Decode"));
-            }
-        }
     }
 }

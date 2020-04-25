@@ -60,6 +60,7 @@ import * as typescript from 'highlight.js/lib/languages/typescript';
 import * as scss from 'highlight.js/lib/languages/scss';
 import * as xml from 'highlight.js/lib/languages/xml';
 import * as json from 'highlight.js/lib/languages/json';
+//import { EmailExistsValidator } from '../app/views/pages/auth/register/email-exists.validator';
 
 // tslint:disable-next-line:class-name
 const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
@@ -93,6 +94,7 @@ export function hljsLanguages(): HighlightLanguage[] {
 		BrowserAnimationsModule,
 		BrowserModule,
 		AppRoutingModule,
+		//EmailExistsValidator,
 		HttpClientModule,
 		environment.isMockEnabled ? HttpClientInMemoryWebApiModule.forRoot(FakeApiService, {
 			passThruUnknownUrl: true,

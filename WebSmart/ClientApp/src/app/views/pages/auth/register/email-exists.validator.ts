@@ -1,7 +1,8 @@
 import { AuthNoticeService, AuthService, Register, User } from '../../../../core/auth/';
-import { AbstractControl, AsyncValidatorFn } from "@angular/forms";
+import { AbstractControl, AsyncValidatorFn, ValidationErrors  } from "@angular/forms";
 import { Observable, of } from "rxjs";
-import { finalize, takeUntil, tap } from 'rxjs/operators';
+import { finalize, takeUntil, tap, map, debounceTime, take, switchMap } from 'rxjs/operators';
+import { ApiRegister } from '../../../../core/auth/_models/api-register.model';
 
 function isEmptyInputValue(value: any): boolean {
 	// we don't check for string here so it also works with arrays
@@ -16,7 +17,9 @@ export class EmailExistsValidator {
 
 	constructor(
 		private auth: AuthService
-	) { }
+	) {
+		
+	}
 	//static EmailExists(signupService: AuthService) {
 	//	return (control: AbstractControl) => {
 	//		return signupService.emailExists(control.value).pipe(tap(res => {
@@ -25,10 +28,11 @@ export class EmailExistsValidator {
 	//	};
 	//}
 
+	public apiUser: ApiRegister = new ApiRegister();
 	static EmailExists(registerService: AuthService): AsyncValidatorFn {
 		return (control: AbstractControl):
-			| Promise<{ [key: string]: any } | null>
-			| Observable<{ [key: string]: any } | null> => {
+			| Promise<ValidationErrors  | null>
+			| Observable<ValidationErrors | null> => {
 			if (isEmptyInputValue(control.value)) {
 				return of(null);
 			} else if (control.value === "") {
@@ -36,20 +40,28 @@ export class EmailExistsValidator {
 
 			}
 			else {
-				return registerService.emailExists(control.value).toPromise().then(res => {
-					return res ? null : { emailTaken: true };
-				});
-				//return control.valueChanges.pipe(
-				//	tap(_ =>
-				//		registerService
-				//			.emailExists(control.value)
-				//			.pipe(
-				//				tap(user =>
-				//					user ? { existingEmail: { value: control.value } } : null
-				//				)
-				//			)
-				//	)
-				//);
+				//return registerService.emailExists(control.value).pipe(map(res => {
+				//	return res ? null : { emailTaken: true };
+				//}))
+				return control.valueChanges.pipe(
+					debounceTime(500),
+					take(1),
+					switchMap(_ =>
+						registerService.emailExists(control.value)
+							.pipe(
+								map(apiUser => {
+									if (apiUser.Email == 'true') {
+										return { "emailExists": true }
+									}
+									else {
+										return null;
+									}
+									//return apiUser?{ "emailExists": true } : null;
+								}
+								)
+							)
+					)
+				);
 			}
 		};
 	}

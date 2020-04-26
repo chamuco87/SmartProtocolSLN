@@ -84,7 +84,7 @@ export class AuthService {
             );
 	}
 
-	emailExists(email: string): Observable<any> {
+	emailExists(email: string): Observable<ApiRegister> {
 		const httpHeaders = new HttpHeaders();
 		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
 
@@ -97,15 +97,16 @@ export class AuthService {
 		return this.http.post<ApiRegister>(BASE_API_URL + EMAIL_EXISTS, apiUser, { headers: httpHeaders })
 			.pipe(
 				map((res: any) => {
-					if (res.data) {
-						return res.data.emailExists;
+					if (res.data.emailExists) {
+						let _apiuser = new ApiRegister();
+						_apiuser.Email = 'true';
+						return _apiuser;
 					}
 					else {
-						return false;
+						let _apiuser = new ApiRegister();
+						_apiuser.Email = 'false';
+						return _apiuser;
 					}
-				}),
-				catchError(err => {
-					return null;
 				})
 			);
 	}

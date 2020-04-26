@@ -1,7 +1,7 @@
 // Angular
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation, NgModule } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 // RxJS
 import { finalize, takeUntil, tap } from 'rxjs/operators';
 // Translate
@@ -91,16 +91,16 @@ export class RegisterComponent implements OnInit, OnDestroy {
 			//	Validators.maxLength(100)
 			//])
 			//],
-			email: ['', Validators.compose([
+			email: new FormControl('', [
 				Validators.required,
 				Validators.email,
 				Validators.minLength(3),
 				// https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
 				Validators.maxLength(320),
-				EmailExistsValidator.EmailExists(this.auth)
-			],
-				)
-			],
+				/**/],
+				[EmailExistsValidator.EmailExists(this.auth)]
+				
+			),
 			//username: ['', Validators.compose([
 			//	Validators.required,
 			//	Validators.minLength(3),
@@ -121,6 +121,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 			],
 			agree: [false, Validators.compose([Validators.required])]
 		}, {
+			//asyncValidators: [EmailExistsValidator.EmailExists(this.auth)],
 				validator: [ConfirmPasswordValidator.MatchPassword]
 		});
 	}

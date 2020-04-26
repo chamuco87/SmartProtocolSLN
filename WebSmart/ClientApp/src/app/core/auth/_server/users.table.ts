@@ -9,7 +9,7 @@ export class UsersTable {
 			refreshToken: 'access-token-f8c137a2c98743f48b643e71161d90aa',
 			roles: [1], // Administrator
 			pic: './assets/media/users/300_25.jpg',
-			fullname: 'Sean',
+			fullname: 'Jose',
 			occupation: 'CEO',
 			companyName: 'Keenthemes',
 			phone: '456669067890',
@@ -35,7 +35,7 @@ export class UsersTable {
 			refreshToken: 'access-token-f8e4c61a318e4d618b6c199ef96b9e55',
 			roles: [2], // Manager
 			pic: './assets/media/users/100_2.jpg',
-			fullname: 'Megan',
+			fullname: 'Paulina',
 			occupation: 'Deputy Head of Keenthemes in New York office',
 			companyName: 'Keenthemes',
 			phone: '456669067891',

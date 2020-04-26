@@ -15,6 +15,7 @@ import { User } from '../_models/user.model';
 import { Permission } from '../_models/permission.model';
 import { Role } from '../_models/role.model';
 import { ApiRegister } from '../_models/api-register.model';
+import { ServerResponse } from '../_models/server-response.model';
 
 const BASE_API_URL = 'https://localhost:44307/'
 const REGISTER_USER = 'api/SmartProtocol/Register'
@@ -33,7 +34,7 @@ export class AuthService {
                 private httpUtils: HttpUtilsService) { }
 
     // Authentication/Authorization
-    login(email: string, password: string): Observable<any> {
+	login(email: string, password: string): Observable<User> {
         if (!email || !password) {
             return of(null);
         }
@@ -43,20 +44,25 @@ export class AuthService {
 
 		const httpHeaders = new HttpHeaders();
 		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
-		return this.http.post<ApiRegister>(BASE_API_URL + LOGIN_USER, apiUser, { headers: httpHeaders })
+		return this.http.post<ServerResponse>(BASE_API_URL + LOGIN_USER, apiUser, { headers: httpHeaders })
 			.pipe(
-				map((res: any) => {
-					let _user = new User();
-					_user.accessToken = res.Email + res.Password;
-					return _user;
-				}),
-				catchError(err => {
-					return null;
+				map((res: ServerResponse) => {
+					if (res.isSuccess) {
+						let _user: User;
+						_user = res.data;
+						_user.accessToken = 'access-token-6829bba69dd3421d8762-991e9e806dbf'
+						return _user;
+					}
+					else {
+						return null;
+					}
+					
 				})
-			);
+				, catchError(err => { return of(null) }
+				));
     }
 
-    register(user: User): Observable<any> {
+    register(user: User): Observable<User> {
         user.roles = [2]; // Manager
         user.accessToken = 'access-token-' + Math.random();
         user.refreshToken = 'access-token-' + Math.random();
@@ -67,15 +73,21 @@ export class AuthService {
 
         const httpHeaders = new HttpHeaders();
 		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
-		return this.http.post<ApiRegister>(BASE_API_URL + REGISTER_USER, apiUser, { headers: httpHeaders })
-            .pipe(
-				map((res: any) => {
-					if (res.data) {
-
-						 return res.data;
+		return this.http.post<ServerResponse>(BASE_API_URL + REGISTER_USER, apiUser, { headers: httpHeaders })
+			.pipe(
+				map((res: ServerResponse) => {
+					if (res.isSuccess) {
+						let _user: User;
+						_user = res.data;
+						if (_user._userId) {
+							return res.data;
+						}
+						else {
+							return null;
+						}
 					}
 					else {
-						return res;
+						return null;
 					}
                 }),
                 catchError(err => {

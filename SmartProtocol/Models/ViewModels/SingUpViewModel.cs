@@ -9,4 +9,10 @@ namespace SmartProtocol.ViewModels
         public string Password { get; set; }
 
     }
+
+    public class TokenValidatorViewModel
+    {
+        public string token { get; set; }
+
+    }
 }

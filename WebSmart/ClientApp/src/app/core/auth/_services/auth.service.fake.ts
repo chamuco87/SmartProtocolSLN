@@ -16,10 +16,12 @@ import { Permission } from '../_models/permission.model';
 import { Role } from '../_models/role.model';
 import { ApiRegister } from '../_models/api-register.model';
 import { ServerResponse } from '../_models/server-response.model';
+import { TokenValidator } from '../_models/token-validator.model';
 
 const BASE_API_URL = 'https://localhost:44307/'
 const REGISTER_USER = 'api/SmartProtocol/Register'
 const EMAIL_EXISTS = 'api/SmartProtocol/EmailExists'
+const VALIDATE_TOKEN = 'api/SmartProtocol/ValidateToken'
 const LOGIN_USER = 'api/SmartProtocol/Login'
 const API_USERS_URL = 'api/users';
 const API_PERMISSION_URL = 'api/permissions';
@@ -100,7 +102,7 @@ export class AuthService {
 		const httpHeaders = new HttpHeaders();
 		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
 
-		const options = { params: new HttpParams({ fromObject: { email: email } }), headers: httpHeaders };
+		//const options = { params: new HttpParams({ fromObject: { email: email } }), headers: httpHeaders };
 
 
 		let apiUser = new ApiRegister();
@@ -117,6 +119,32 @@ export class AuthService {
 					else {
 						let _apiuser = new ApiRegister();
 						_apiuser.Email = 'false';
+						return _apiuser;
+					}
+				})
+			);
+	}
+
+	validateToken(token: string): Observable<User> {
+		const httpHeaders = new HttpHeaders();
+		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
+
+		//const options = { params: new HttpParams({ fromObject: { email: email } }), headers: httpHeaders };
+
+
+		let tokenValidator = new TokenValidator();
+		tokenValidator.Token = token;
+		return this.http.post<User>(BASE_API_URL + VALIDATE_TOKEN, tokenValidator, { headers: httpHeaders })
+			.pipe(
+				map((res: any) => {
+					if (res.data) {
+						let _apiuser = new User();
+						_apiuser = res.data;
+						return _apiuser;
+					}
+					else {
+						let _apiuser = new User();
+						_apiuser = res.data;
 						return _apiuser;
 					}
 				})

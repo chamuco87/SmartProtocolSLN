@@ -154,6 +154,29 @@ namespace SmartProtocol.Controllers
             return GenerateResponse(response);
         }
 
+        [HttpPost("ValidateToken")]
+        public ContentResult ValidateToken([FromBody] JToken data)
+        {
+            try
+            {
+                var jsonData = JsonConvert.DeserializeObject<TokenValidatorViewModel>(data.ToString());
+                User _user = new User();
+                Models.User user = new Models.User();
+                if (!string.IsNullOrEmpty(jsonData.token))
+                {
+                    user = _smartProtocolService.ValidateToken(jsonData.token);
+
+                }
+                var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { email = user.Email.Where(m => m.IsPrimary == true).FirstOrDefault().EmailAddress, _userId = user.UserId } };
+                return GenerateResponse(response);
+            }
+            catch (Exception)
+            {
+                var response = new ResponseViewModel() { IsSuccess = true, Data = new User() };
+                return GenerateResponse(response);
+            }
+        }
+
         [HttpGet("IsValidEmail")]
         public ContentResult IsValidEmail(string email)
         {
@@ -230,6 +253,7 @@ namespace SmartProtocol.Controllers
 
         public bool IsValidPasswordFormat(string password)
         {
+            return true;
             bool isValid = false;
             try
             {

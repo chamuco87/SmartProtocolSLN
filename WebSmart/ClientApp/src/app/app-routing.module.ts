@@ -63,7 +63,9 @@ const routes: Routes = [
 		],
 	},
 
-	{path: '**', redirectTo: 'error/403', pathMatch: 'full'},
+	{ path: '**', redirectTo: 'error/403', pathMatch: 'full' },
+
+
 ];
 
 @NgModule({

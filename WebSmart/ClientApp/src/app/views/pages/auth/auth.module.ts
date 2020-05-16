@@ -21,6 +21,7 @@ import { ForgotPasswordComponent } from './forgot-password/forgot-password.compo
 import { AuthNoticeComponent } from './auth-notice/auth-notice.component';
 // Auth
 import { AuthEffects, AuthGuard, authReducer, AuthService } from '../../../core/auth';
+import { ConfirmEmailComponent } from './confirm-email/confirm-email.component';
 
 const routes: Routes = [
 	{
@@ -44,6 +45,11 @@ const routes: Routes = [
 			{
 				path: 'forgot-password',
 				component: ForgotPasswordComponent,
+			},
+			{
+				path: 'confirm-email/:tokenId',
+				component: ConfirmEmailComponent,
+			
 			}
 		]
 	}
@@ -78,7 +84,8 @@ const routes: Routes = [
 		LoginComponent,
 		RegisterComponent,
 		ForgotPasswordComponent,
-		AuthNoticeComponent
+		AuthNoticeComponent,
+		ConfirmEmailComponent
 	]
 })
 

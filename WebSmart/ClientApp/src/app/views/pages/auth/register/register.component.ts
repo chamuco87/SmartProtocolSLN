@@ -126,6 +126,14 @@ export class RegisterComponent implements OnInit, OnDestroy {
 		});
 	}
 
+
+	onEnter(event) {
+		if (event.code == 'Enter') {
+			event.preventDefault();
+			this.submit();
+		}
+	}
+
 	/**
 	 * Form Submit
 	 */
@@ -165,7 +173,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 					this.authNoticeService.setNotice(this.translate.instant('AUTH.REGISTER.SUCCESS'), 'success');
 					this.router.navigateByUrl('/auth/login');
 				} else {
-					this.authNoticeService.setNotice(this.translate.instant('AUTH.VALIDATION.INVALID_LOGIN'), 'danger');
+					this.authNoticeService.setNotice(this.translate.instant('We have problems craeting your account, try again later'), 'danger');
 				}
 			}),
 			takeUntil(this.unsubscribe),

@@ -77,6 +77,33 @@ namespace SmartProtocol.Controllers
             return dbContext.Email.Where(m => m.EmailAddress == email).Any();
         }
 
+        public User ValidateToken(string token)
+        {
+            string decodedToken = Decode64(token);
+            User _user = new User();
+            bool isValid = false;
+            var verificationElements = decodedToken.Split(':');
+            string email = "";
+            string tokenV = "";
+            if (verificationElements.Count() == 2)
+            {
+                email = verificationElements[0];
+                tokenV = verificationElements[1];
+            }
+            
+            var userEmail = dbContext.Email.FirstOrDefault(m => m.EmailAddress == email && m.ActivationToken == tokenV);
+            isValid = userEmail != null;
+            if (isValid)
+            {
+                userEmail.IsVerified = true;
+                dbContext.SaveChanges();
+                _user = dbContext.User.FirstOrDefault(m => m.UserId == userEmail.UserId);
+                
+            }
+
+            return _user;
+        }
+
 
         public string Encode64(string text)
         {
@@ -103,7 +130,17 @@ namespace SmartProtocol.Controllers
             {
                 if (!String.IsNullOrEmpty(encodedText))
                 {
-                    byte[] textBytes = Convert.FromBase64String(encodedText);
+                    byte[] textBytes;
+
+                    try
+                    {
+                        textBytes = Convert.FromBase64String(encodedText);
+                    }
+                    catch (Exception ex)
+                    {
+                        encodedText = encodedText.Replace('-', '+').Replace('_', '/').PadRight(4 * ((encodedText.Length + 3) / 4), '=');
+                        textBytes = Convert.FromBase64String(encodedText);
+                    }
                     return Encoding.UTF8.GetString(textBytes); ;
                 }
                 else
@@ -112,7 +149,7 @@ namespace SmartProtocol.Controllers
                 }
 
             }
-            catch
+            catch(Exception ex)
             {
                 throw (new Exception("Invalid string to Decode"));
             }
@@ -126,10 +163,11 @@ namespace SmartProtocol.Controllers
             const string subject = "Activate your account";
             string body = "Please activate your account";
 
+            string validateUrl = "http://localhost:4200/auth/confirm-email/" + Encode64(email+":"+activationToken);
             body = System.IO.File.ReadAllText(@"..\SmartProtocol\Templates\ConfirmEmailTemplate.html").ToString();
             body = body.Replace("{mailto:email}", "mailto:" + email);
             body = body.Replace("{email}", email);
-            body = body.Replace("{activateUrl}", "http://carbajalsalinas.com");
+            body = body.Replace("{activateUrl}", validateUrl);
 
 
             var smtp = new SmtpClient

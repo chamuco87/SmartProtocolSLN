@@ -99,7 +99,7 @@ namespace SmartProtocol.Controllers
                     {
                         string activationToken = _smartProtocolService.GenerateActivationToken(email, DateTime.Now);
                         var _Login =_smartProtocolService.SaveUser(email, password, activationToken);
-                        _smartProtocolService.SendEmailMessage(email, activationToken);
+                        _smartProtocolService.SendVerficationEmail(email, activationToken);
                         var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { _userId = _Login.UserId } };
                         return GenerateResponse(response);
                     }
@@ -118,6 +118,106 @@ namespace SmartProtocol.Controllers
             {
                 List<Error> errors = new List<Error>();
                 errors.Add(new Error() { ErrorCode = "ECR0120", ErrorDetail = ex.Message });
+                return GenerateErrorResponse(errors);
+            }
+        }
+
+        [HttpPost("ResetPassword")]
+
+        public ContentResult ResetPassword([FromBody] JToken data)
+        {
+            string email = "";
+            SingUpViewModel jsonData;
+
+            try
+            {
+                jsonData = JsonConvert.DeserializeObject<SingUpViewModel>(data.ToString());
+
+                if (!string.IsNullOrEmpty(jsonData.Email))
+                {
+                    if (IsValidEmailFormat(jsonData.Email))
+                    {
+                        email = jsonData.Email;
+                    }
+                    else
+                    {
+                        throw (new Exception("Email format invalid."));
+                    }
+
+                }
+                else
+                {
+                    throw (new Exception("Invalid/Empty Email"));
+                }
+
+
+                var isEmailRegistered = EmailAlreadyExists(email);
+                if (isEmailRegistered)
+                {
+                    try
+                    {
+                        string activationToken = _smartProtocolService.GenerateActivationToken(email, DateTime.Now);
+                         var _Login = _smartProtocolService.SaveResetToken(email, activationToken);
+                        _smartProtocolService.SendResetPasswordEmail(email, activationToken);
+                        var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { _userId = 9999 } };
+                        return GenerateResponse(response);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw (new Exception("There was an issue while creating the user, try again later."));
+                    }
+                }
+                else
+                {
+                    throw (new Exception("The email address is not registered."));
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                List<Error> errors = new List<Error>();
+                errors.Add(new Error() { ErrorCode = "RPI0126", ErrorDetail = ex.Message });
+                return GenerateErrorResponse(errors);
+            }
+        }
+
+        [HttpPost("SetPassword")]
+
+        public ContentResult SetPassword([FromBody] JToken data)
+        {
+            string email = "";
+            SingUpViewModel jsonData;
+
+            try
+            {
+                jsonData = JsonConvert.DeserializeObject<SingUpViewModel>(data.ToString());
+                User _user = new User();
+                Models.User user = new Models.User();
+                if (!string.IsNullOrEmpty(jsonData.Email))
+                {
+                    try
+                    {
+                        user = _smartProtocolService.SetPassworAndToken(jsonData.Email, jsonData.Password);
+                        var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { _userId = user.UserId } };
+                        return GenerateResponse(response);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw (new Exception("There was an issue while updating the password, try again later."));
+                    }
+                }
+                else {
+                    throw (new Exception("Invalid token or password."));
+                }
+
+                
+
+            }
+            catch (Exception ex)
+            {
+                List<Error> errors = new List<Error>();
+                errors.Add(new Error() { ErrorCode = "RPI0126", ErrorDetail = ex.Message });
                 return GenerateErrorResponse(errors);
             }
         }
@@ -167,8 +267,44 @@ namespace SmartProtocol.Controllers
                     user = _smartProtocolService.ValidateToken(jsonData.token);
 
                 }
-                var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { email = user.Email.Where(m => m.IsPrimary == true).FirstOrDefault().EmailAddress, _userId = user.UserId } };
+                if (user.UserId != 0)
+                {
+                    var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { email = user.Email.Where(m => m.IsPrimary == true).FirstOrDefault().EmailAddress, _userId = user.UserId } };
+                    return GenerateResponse(response);
+                }
+                else {
+                    throw new Exception("We were not able to validate your token or is expired. Try again later.");
+                }
+                
+            }
+            catch (Exception)
+            {
+                var response = new ResponseViewModel() { IsSuccess = true, Data = new User() };
                 return GenerateResponse(response);
+            }
+        }
+
+        [HttpPost("ValidateResetToken")]
+        public ContentResult ValidateResetToken([FromBody] JToken data)
+        {
+            try
+            {
+                var jsonData = JsonConvert.DeserializeObject<TokenValidatorViewModel>(data.ToString());
+                User _user = new User();
+                Models.User user = new Models.User();
+                if (!string.IsNullOrEmpty(jsonData.token))
+                {
+                    user = _smartProtocolService.ValidateResetToken(jsonData.token);
+
+                }
+                if (user.UserId != 0)
+                {
+                    var response = new ResponseViewModel() { IsSuccess = true, Data = new User() { _userId = user.UserId } };
+                    return GenerateResponse(response);
+                }
+                else {
+                    throw new Exception("Not able to validate your token or is expired.");
+                }
             }
             catch (Exception)
             {

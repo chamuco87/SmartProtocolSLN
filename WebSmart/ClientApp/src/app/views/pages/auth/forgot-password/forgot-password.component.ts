@@ -115,7 +115,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
 		this.authService.requestPassword(email).pipe(
 			tap(response => {
 				if (response) {
-					this.authNoticeService.setNotice(this.translate.instant('AUTH.FORGOT.SUCCESS'), 'success');
+					this.authNoticeService.setNotice(this.translate.instant('We have sent you an email to reset your password.'), 'success');
 					this.router.navigateByUrl('/auth/login');
 				} else {
 					this.authNoticeService.setNotice(this.translate.instant('AUTH.VALIDATION.NOT_FOUND', {name: this.translate.instant('AUTH.INPUT.EMAIL')}), 'danger');

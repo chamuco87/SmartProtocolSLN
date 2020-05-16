@@ -20,8 +20,11 @@ import { TokenValidator } from '../_models/token-validator.model';
 
 const BASE_API_URL = 'https://localhost:44307/'
 const REGISTER_USER = 'api/SmartProtocol/Register'
+const RESET_USER = 'api/SmartProtocol/ResetPassword'
 const EMAIL_EXISTS = 'api/SmartProtocol/EmailExists'
 const VALIDATE_TOKEN = 'api/SmartProtocol/ValidateToken'
+const VALIDATE_RESET_TOKEN = 'api/SmartProtocol/ValidateResetToken'
+const SET_PASSWORD = 'api/SmartProtocol/SetPassword'
 const LOGIN_USER = 'api/SmartProtocol/Login'
 const API_USERS_URL = 'api/users';
 const API_PERMISSION_URL = 'api/permissions';
@@ -64,7 +67,7 @@ export class AuthService {
 				));
     }
 
-    register(user: User): Observable<User> {
+    register(user: User): Observable<any> {
         user.roles = [2]; // Manager
         user.accessToken = 'access-token-' + Math.random();
         user.refreshToken = 'access-token-' + Math.random();
@@ -81,8 +84,9 @@ export class AuthService {
 					if (res.isSuccess) {
 						let _user: User;
 						_user = res.data;
+						_user.accessToken = 'access-token-6829bba69dd3421d8762-991e9e806dbf'
 						if (_user._userId) {
-							return res.data;
+							return _user;
 						}
 						else {
 							return null;
@@ -96,6 +100,41 @@ export class AuthService {
                     return null;
                 })
             );
+	}
+
+	resetPassword(user: User): Observable<any> {
+		user.roles = [2]; // Manager
+		user.accessToken = 'access-token-' + Math.random();
+		user.refreshToken = 'access-token-' + Math.random();
+		user.pic = './assets/media/users/default.jpg';
+		let apiUser = new ApiRegister();
+		apiUser.Email = user.email;
+		apiUser.Password = user.password;
+
+		const httpHeaders = new HttpHeaders();
+		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
+		return this.http.post<ServerResponse>(BASE_API_URL +SET_PASSWORD, apiUser, { headers: httpHeaders })
+			.pipe(
+				map((res: ServerResponse) => {
+					if (res.isSuccess) {
+						let _user: User;
+						_user = res.data;
+						_user.accessToken = 'access-token-6829bba69dd3421d8762-991e9e806dbf'
+						if (_user._userId) {
+							return _user;
+						}
+						else {
+							return null;
+						}
+					}
+					else {
+						return null;
+					}
+				}),
+				catchError(err => {
+					return null;
+				})
+			);
 	}
 
 	emailExists(email: string): Observable<ApiRegister> {
@@ -151,26 +190,83 @@ export class AuthService {
 			);
 	}
 
-    requestPassword(email: string): Observable<any> {
-    	return this.http.get(API_USERS_URL).pipe(
-            map((users: User[]) => {
-                if (users.length <= 0) {
-                    return null;
-                }
+	validateResetToken(token: string): Observable<User> {
+		const httpHeaders = new HttpHeaders();
+		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
 
-                const user = find(users, (item: User) => {
-                    return (item.email.toLowerCase() === email.toLowerCase());
-                });
+		//const options = { params: new HttpParams({ fromObject: { email: email } }), headers: httpHeaders };
 
-                if (!user) {
-                    return null;
-                }
 
-                user.password = undefined;
-                return user;
-            }),
-            catchError(this.handleError('forgot-password', []))
-        );
+		let tokenValidator = new TokenValidator();
+		tokenValidator.Token = token;
+		return this.http.post<User>(BASE_API_URL + VALIDATE_RESET_TOKEN, tokenValidator, { headers: httpHeaders })
+			.pipe(
+				map((res: any) => {
+					if (res.data) {
+						let _apiuser = new User();
+						_apiuser = res.data;
+						return _apiuser;
+					}
+					else {
+						let _apiuser = new User();
+						_apiuser = res.data;
+						return _apiuser;
+					}
+				})
+			);
+	}
+
+	requestPassword(email: string): Observable<any> {
+		//user.roles = [2]; // Manager
+		//user.accessToken = 'access-token-' + Math.random();
+		//user.refreshToken = 'access-token-' + Math.random();
+		//user.pic = './assets/media/users/default.jpg';
+		let apiUser = new ApiRegister();
+		apiUser.Email = email;
+		apiUser.Password = null;
+
+		const httpHeaders = new HttpHeaders();
+		httpHeaders.set('Content-Type', 'application/json').set('Access-Control-Allow-Origin', 'https://localhost:44307/').set('Access-Control-Allow-Credentials', 'true').set('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE');
+		return this.http.post<ServerResponse>(BASE_API_URL + RESET_USER, apiUser, { headers: httpHeaders })
+			.pipe(
+				map((res: ServerResponse) => {
+					if (res.isSuccess) {
+						let _user: User;
+						_user = res.data;
+						if (_user._userId) {
+							return res.data;
+						}
+						else {
+							return null;
+						}
+					}
+					else {
+						return null;
+					}
+				}),
+				catchError(err => {
+					return null;
+				})
+			);
+    	//return this.http.get(API_USERS_URL).pipe(
+     //       map((users: User[]) => {
+     //           if (users.length <= 0) {
+     //               return null;
+     //           }
+
+     //           const user = find(users, (item: User) => {
+     //               return (item.email.toLowerCase() === email.toLowerCase());
+     //           });
+
+     //           if (!user) {
+     //               return null;
+     //           }
+
+     //           user.password = undefined;
+     //           return user;
+     //       }),
+     //       catchError(this.handleError('forgot-password', []))
+     //   );
     }
 
     getUserByToken(): Observable<User> {

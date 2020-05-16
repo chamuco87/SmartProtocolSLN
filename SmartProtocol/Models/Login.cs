@@ -11,6 +11,8 @@ namespace SmartProtocol.Models
         public string Password { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? LastLoginOn { get; set; }
+        public string ResetToken { get; set; }
+        public DateTime? TokenCreatedOn { get; set; }
 
         public virtual Email Email { get; set; }
         public virtual User User { get; set; }

@@ -165,16 +165,22 @@ namespace SmartProtocol.Models
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
+                entity.Property(e => e.ResetToken)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.TokenCreatedOn).HasColumnType("datetime");
+
                 entity.HasOne(d => d.Email)
                     .WithMany(p => p.Login)
                     .HasForeignKey(d => d.EmailId)
-                    .HasConstraintName("FK__Login__EmailId__46B27FE2");
+                    .HasConstraintName("FK__Login__EmailId__51300E55");
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Login)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Login__UserId__47A6A41B");
+                    .HasConstraintName("FK__Login__UserId__5224328E");
             });
 
             modelBuilder.Entity<Step>(entity =>

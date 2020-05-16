@@ -1,35 +1,29 @@
 // Angular
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation, NgModule } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
+
 // RxJS
 import { finalize, takeUntil, tap } from 'rxjs/operators';
+import { HttpClientModule } from '@angular/common/http';
 // Translate
 import { TranslateService } from '@ngx-translate/core';
 // NGRX
 import { Store } from '@ngrx/store';
 import { AppState } from '../../../../core/reducers';
 // Auth
-import { AuthNoticeService, AuthService, Register, User, Login } from '../../../../core/auth/';
+import { AuthNoticeService, AuthService, Register, User, Login} from '../../../../core/auth/';
 import { Subject } from 'rxjs';
-import { ConfirmPasswordValidator } from './confirm-password.validator';
-import { EmailExistsValidator } from './email-exists.validator';
-import { HttpClientModule } from '@angular/common/http';
+import { ConfirmPasswordValidator } from './../register/confirm-password.validator';
+import { EmailExistsValidator } from './../register/email-exists.validator';
+
+
 
 @Component({
-	selector: 'kt-register',
-	templateUrl: './register.component.html',
-	encapsulation: ViewEncapsulation.None
+  selector: 'kt-reset-password',
+  templateUrl: './reset-password.component.html'
 })
-
-@NgModule({
-	imports: [
-		HttpClientModule,
-		EmailExistsValidator
-	]
-})
-
-export class RegisterComponent implements OnInit, OnDestroy {
+export class ResetPasswordComponent implements OnInit, OnDestroy {
 	registerForm: FormGroup;
 	loading = false;
 	errors: any = [];
@@ -54,25 +48,53 @@ export class RegisterComponent implements OnInit, OnDestroy {
 		private auth: AuthService,
 		private store: Store<AppState>,
 		private fb: FormBuilder,
-		private cdr: ChangeDetectorRef
+		private cdr: ChangeDetectorRef,
+		private route: ActivatedRoute
 	) {
 		this.unsubscribe = new Subject();
 	}
 
-	/*
-	 * @ Lifecycle sequences => https://angular.io/guide/lifecycle-hooks
-    */
-
+	// Public params
+	forgotPasswordForm: FormGroup;
+	private sub: any;
+	tokenId: string;
 	/**
-	 * On init
+	 * Component constructor
+	 *
+	 * @param authService
+	 * @param authNoticeService
+	 * @param translate
+	 * @param router
+	 * @param fb
+	 * @param cdr
 	 */
+	
+
+
 	ngOnInit() {
 		this.initRegisterForm();
-	}
+		this.sub = this.route.params.subscribe(params => {
+			this.tokenId = params['tokenId']; // (+) converts string 'id' to a number
+			this.auth.validateResetToken(this.tokenId).pipe(
+				tap(response => {
+					if (response._userId) {
+						this.authNoticeService.setNotice('Thanks for verify your identity lets change your password', 'success');
+						
+						//this.router.navigateByUrl('/auth/login');
+					} else {
+						this.authNoticeService.setNotice('The link is expired, try again.', 'danger');
+						this.router.navigateByUrl('/auth/forgot-password');
+					}
+				}),
+				takeUntil(this.unsubscribe),
+				finalize(() => {
+					this.loading = false;
+					this.cdr.markForCheck();
+				})
+			).subscribe();
+		});
+  }
 
-	/*
-    * On destroy
-    */
 	ngOnDestroy(): void {
 		this.unsubscribe.next();
 		this.unsubscribe.complete();
@@ -91,16 +113,16 @@ export class RegisterComponent implements OnInit, OnDestroy {
 			//	Validators.maxLength(100)
 			//])
 			//],
-			email: new FormControl('', [
-				Validators.required,
-				Validators.email,
-				Validators.minLength(3),
-				// https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
-				Validators.maxLength(320),
-				/**/],
-				[EmailExistsValidator.EmailExists(this.auth)]
-				
-			),
+			//email: new FormControl('', [
+			//	Validators.required,
+			//	Validators.email,
+			//	Validators.minLength(3),
+			//	// https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
+			//	Validators.maxLength(320),
+			//	/**/],
+			//	[EmailExistsValidator.EmailExists(this.auth)]
+
+			//),
 			//username: ['', Validators.compose([
 			//	Validators.required,
 			//	Validators.minLength(3),
@@ -118,11 +140,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
 				Validators.minLength(3),
 				Validators.maxLength(100)
 			])
-			],
-			agree: [false, Validators.compose([Validators.required])]
+			]
+			//agree: [false, Validators.compose([Validators.required])]
 		}, {
 			//asyncValidators: [EmailExistsValidator.EmailExists(this.auth)],
-				validator: [ConfirmPasswordValidator.MatchPassword]
+			validator: [ConfirmPasswordValidator.MatchPassword]
 		});
 	}
 
@@ -149,29 +171,31 @@ export class RegisterComponent implements OnInit, OnDestroy {
 		}
 
 
-		if (!controls.agree.value) {
-			// you must agree the terms and condition
-			// checkbox cannot work inside mat-form-field https://github.com/angular/material2/issues/7891
-			this.authNoticeService.setNotice('You must agree the terms and condition', 'danger');
-			return;
-		}
+		//if (!controls.agree.value) {
+		//	// you must agree the terms and condition
+		//	// checkbox cannot work inside mat-form-field https://github.com/angular/material2/issues/7891
+		//	this.authNoticeService.setNotice('You must agree the terms and condition', 'danger');
+		//	return;
+		//}
 
 		this.loading = true;
 
 		const _user: User = new User();
 		_user.clear();
-		_user.email = controls.email.value;
+		_user.email = this.tokenId;
 		//_user.username = controls.username.value;
 		//_user.fullname = controls.fullname.value;
 		_user.password = controls.password.value;
 		_user.roles = [];
-		this.auth.register(_user).pipe(
+		this.auth.resetPassword(_user).pipe(
 			tap(user => {
 				if (user) {
-					this.store.dispatch(new Register({authToken: user.accessToken}));
-					// pass notice message to the login page
-					this.store.dispatch(new Login({ authToken: user.accessToken }));
-					this.router.navigateByUrl('/dashboard'); // Main page
+					if (user) {
+						this.store.dispatch(new Login({ authToken: user.accessToken }));
+						this.router.navigateByUrl('/dashboard'); // Main page
+					}
+					//this.store.dispatch(new Register({ authToken: user.accessToken }));
+					//// pass notice message to the login page
 					//this.authNoticeService.setNotice(this.translate.instant('AUTH.REGISTER.SUCCESS'), 'success');
 					//this.router.navigateByUrl('/auth/login');
 				} else {

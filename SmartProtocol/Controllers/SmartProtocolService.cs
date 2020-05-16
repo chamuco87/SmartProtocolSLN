@@ -41,6 +41,15 @@ namespace SmartProtocol.Controllers
             return login;
         }
 
+        public Login SaveResetToken(string email, string resetToken)
+        {
+            var login = dbContext.Login.FirstOrDefault(m => m.Email.EmailAddress == email);
+            login.ResetToken = resetToken;
+            login.TokenCreatedOn = DateTime.Now;
+            dbContext.SaveChanges();
+            return login;
+        }
+
         public Login ValidateLogin(string emailAddress, string password)
         {
             var email = dbContext.Email.FirstOrDefault(m => m.EmailAddress == emailAddress);
@@ -104,6 +113,65 @@ namespace SmartProtocol.Controllers
             return _user;
         }
 
+        public User ValidateResetToken(string token)
+        {
+            string decodedToken = Decode64(token);
+            User _user = new User();
+            bool isValid = false;
+            var verificationElements = decodedToken.Split(':');
+            string email = "";
+            string tokenV = "";
+            if (verificationElements.Count() == 2)
+            {
+                email = verificationElements[0];
+                tokenV = verificationElements[1];
+            }
+
+            var userEmail = dbContext.Login.FirstOrDefault(m => m.Email.EmailAddress == email && m.ResetToken == tokenV);
+            isValid = userEmail != null;
+            if (isValid)
+            {
+                //userEmail.IsVerified = true;
+                //dbContext.SaveChanges();
+                _user = dbContext.User.FirstOrDefault(m => m.UserId == userEmail.UserId);
+
+            }
+
+            return _user;
+        }
+
+        public User SetPassworAndToken(string token, string password)
+        {
+            string decodedToken = Decode64(token);
+            User _user = new User();
+            bool isValid = false;
+            var verificationElements = decodedToken.Split(':');
+            string email = "";
+            string tokenV = "";
+            if (verificationElements.Count() == 2)
+            {
+                email = verificationElements[0];
+                tokenV = verificationElements[1];
+            }
+
+            var userEmail = dbContext.Login.FirstOrDefault(m => m.Email.EmailAddress == email && m.ResetToken == tokenV);
+            userEmail.Password = Encode64(password);
+            userEmail.ResetToken = null;
+            userEmail.TokenCreatedOn = DateTime.Now;
+            dbContext.SaveChanges();
+            isValid = userEmail != null;
+            if (isValid)
+            {
+                //userEmail.IsVerified = true;
+                //dbContext.SaveChanges();
+                _user = dbContext.User.FirstOrDefault(m => m.UserId == userEmail.UserId);
+
+            }
+
+            return _user;
+        }
+
+
 
         public string Encode64(string text)
         {
@@ -155,7 +223,7 @@ namespace SmartProtocol.Controllers
             }
         }
 
-        public bool SendEmailMessage(string email, string activationToken)
+        public bool SendVerficationEmail(string email, string activationToken)
         {
             var fromAddress = new MailAddress("jose@carbajalsalinas.com","Activate your account");
             var toAddress = new MailAddress(email);
@@ -190,6 +258,43 @@ namespace SmartProtocol.Controllers
             }
             return true;
         }
+
+        public bool SendResetPasswordEmail(string email, string activationToken)
+        {
+            var fromAddress = new MailAddress("jose@carbajalsalinas.com", "Reset your password");
+            var toAddress = new MailAddress(email);
+            const string fromPassword = "QmericA2468";
+            const string subject = "Reset your password";
+            string body = "Reset your password";
+
+            string validateUrl = "http://localhost:4200/auth/reset-password/" + Encode64(email + ":" + activationToken);
+            body = System.IO.File.ReadAllText(@"..\SmartProtocol\Templates\ConfirmEmailTemplate.html").ToString();
+            body = body.Replace("{mailto:email}", "mailto:" + email);
+            body = body.Replace("{email}", email);
+            body = body.Replace("{activateUrl}", validateUrl);
+
+
+            var smtp = new SmtpClient
+            {
+                Host = "smtp.gmail.com",
+                Port = 587,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+            };
+            using (var message = new MailMessage(fromAddress, toAddress)
+            {
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true
+            })
+            {
+                smtp.Send(message);
+            }
+            return true;
+        }
+
 
         public string GenerateActivationToken(string email, DateTime Now)
         {
